@@ -13,8 +13,13 @@ var Usuario = require('../models/usuario'); //importamos el modelo de usuario
 // ===================================
 app.get('/', (req, res, next) => {
 
+    var desde = req.query.desde || 0; // si no viene algun parametro le pongo 0;
+    desde = Number(desde);
+
     //find(querys,campos que quiero).exec(manejo de resultados o errores)
     Usuario.find({}, 'nombre email img role')
+        .skip(desde)
+        .limit(5)
         .exec(
             (err, usuarios) => {
                 if (err) { //si hay error
@@ -25,12 +30,15 @@ app.get('/', (req, res, next) => {
                     })
                 }
 
-                res.status(200).json({
-                    ok: true,
-                    usuarios: usuarios
-                })
+                //contamos los usuarios que se obtienen de la bd
+                Usuario.count({}, (err, conteo) => {
+                    res.status(200).json({
+                        ok: true,
+                        usuarios: usuarios,
+                        total: conteo
+                    });
+                });
             });
-
 });
 
 // ===================================
@@ -72,7 +80,7 @@ app.post('/', mdAuthenticacion.verificaToken, (req, res) => {
 // ===================================
 // Update  usuario
 // ===================================
-app.put('/:id',mdAuthenticacion.verificaToken, (req, res) => {
+app.put('/:id', mdAuthenticacion.verificaToken, (req, res) => {
 
     var id = req.params.id;
     var body = req.body;
@@ -126,7 +134,7 @@ app.put('/:id',mdAuthenticacion.verificaToken, (req, res) => {
 // ===================================
 // Eliminar  usuario por id
 // ===================================
-app.delete('/:id',mdAuthenticacion.verificaToken, (req, res) => {
+app.delete('/:id', mdAuthenticacion.verificaToken, (req, res) => {
 
     var id = req.params.id;
 
